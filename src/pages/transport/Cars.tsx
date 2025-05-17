@@ -122,7 +122,7 @@ export default function Cars() {
                         <SelectValue placeholder="Any Car Type" />
                       </SelectTrigger>
                       <SelectContent position="popper">
-                        <SelectItem value="">Any Car Type</SelectItem>
+                        <SelectItem value="any">Any Car Type</SelectItem>
                         <SelectItem value="compact">Compact</SelectItem>
                         <SelectItem value="mid-size">Mid-size</SelectItem>
                         <SelectItem value="SUV">SUV</SelectItem>
