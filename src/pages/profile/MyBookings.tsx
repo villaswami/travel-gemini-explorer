@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getUserBookings, Booking } from "@/lib/database";
 
 export default function MyBookings() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -33,10 +32,21 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    // Only fetch bookings if authentication check is complete
+    if (authLoading) return;
+
+    // Redirect if not logged in
+    if (!user && !authLoading) {
+      console.log("No user found, redirecting to signin");
+      navigate("/signin");
+      return;
+    }
+    
     const fetchBookings = async () => {
       if (!user) return;
       
       try {
+        console.log("Fetching bookings for user:", user.id);
         const userBookings = await getUserBookings(user.id);
         setBookings(userBookings);
       } catch (error) {
@@ -52,11 +62,21 @@ export default function MyBookings() {
     };
     
     fetchBookings();
-  }, [user, toast]);
+  }, [user, authLoading, toast, navigate]);
   
-  // Redirect if not logged in
-  if (!user && !loading) {
-    navigate("/signin");
+  // If still checking auth status, show loading
+  if (authLoading) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  // If auth check complete and no user, we'll redirect in useEffect
+  if (!user && !authLoading) {
     return null;
   }
   

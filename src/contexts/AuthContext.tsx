@@ -25,20 +25,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const setupAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setUser(data.session?.user || null);
+      try {
+        // Get initial session
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setUser(data.session?.user || null);
+        
+        // Set up auth state listener
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          async (event, newSession) => {
+            console.log("Auth state changed:", event);
+            setSession(newSession);
+            setUser(newSession?.user || null);
+            
+            // Handle sign out
+            if (event === 'SIGNED_OUT') {
+              setSession(null);
+              setUser(null);
+            } 
+            // Handle sign in
+            else if (event === 'SIGNED_IN' && newSession) {
+              setSession(newSession);
+              setUser(newSession.user);
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Auth setup error:", error);
+      } finally {
+        setIsLoading(false);
+      }
       
-      const { data: authListener } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          setSession(session);
-          setUser(session?.user || null);
-        }
-      );
-      
-      setIsLoading(false);
+      // Clean up subscription when component unmounts
       return () => {
-        authListener.subscription.unsubscribe();
+        supabase.auth.onAuthStateChange(null);
       };
     };
     

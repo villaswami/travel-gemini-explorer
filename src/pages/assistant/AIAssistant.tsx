@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { MessageSquare, Send, Plane, Train, Bus, Car } from "lucide-react";
 import { GeminiMessage, getGeminiResponse, travelPrompts } from "@/lib/gemini";
 import MainLayout from "@/components/layout/MainLayout";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function AIAssistant() {
@@ -20,22 +19,22 @@ export default function AIAssistant() {
   const { toast } = useToast();
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const firstMessageSent = useRef(false);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  useEffect(() => {
-    // Set welcome message
-    const welcomeMessage: GeminiMessage = {
-      role: "model",
-      content: user 
-        ? `Hello ${user.user_metadata?.full_name || "there"}! I'm your AI travel assistant. How can I help with your travel plans today?`
-        : "Hello there! I'm your AI travel assistant. How can I help with your travel plans today?"
-    };
-
-    setMessages([welcomeMessage]);
+    // Set welcome message but don't add it to the chat history for API calls
+    if (!firstMessageSent.current) {
+      const welcomeMessage: GeminiMessage = {
+        role: "model",
+        content: user 
+          ? `Hello ${user.user_metadata?.full_name || "there"}! I'm your AI travel assistant. How can I help with your travel plans today?`
+          : "Hello there! I'm your AI travel assistant. How can I help with your travel plans today?"
+      };
+      
+      setMessages([welcomeMessage]);
+      firstMessageSent.current = true;
+    }
 
     // Check if there's a query parameter for the prompt
     const queryParams = new URLSearchParams(location.search);
@@ -49,17 +48,31 @@ export default function AIAssistant() {
   const handleSendMessage = async (messageText: string = input) => {
     if (!messageText.trim()) return;
 
+    // First, check if user is logged in
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to use the AI assistant",
+        variant: "destructive",
+      });
+      navigate("/signin");
+      return;
+    }
+
     const userMessage: GeminiMessage = {
       role: "user",
       content: messageText,
     };
 
+    // Add user message to UI
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
-      const response = await getGeminiResponse(messageText, messages);
+      // For API calls, only send user messages
+      const apiHistory = messages.filter(msg => msg.role === "user");
+      const response = await getGeminiResponse(messageText, apiHistory);
       
       const assistantMessage: GeminiMessage = {
         role: "model",

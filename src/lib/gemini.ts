@@ -17,13 +17,23 @@ export async function getGeminiResponse(
     const genAI = new GoogleGenerativeAI(API_KEY);
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-    const formattedHistory = history.map((msg) => ({
+    // Fix to ensure first message is always user
+    let formattedHistory = [...history];
+    
+    // If first message is from model, remove it from history and handle separately
+    if (formattedHistory.length > 0 && formattedHistory[0].role === "model") {
+      formattedHistory = [];
+    }
+    
+    // Format history properly for Gemini API
+    const chatHistory = formattedHistory.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.content }],
     }));
 
+    // Start fresh chat or with history
     const chat = model.startChat({
-      history: formattedHistory,
+      history: chatHistory.length > 0 ? chatHistory : undefined,
       generationConfig: {
         maxOutputTokens: 1000,
         temperature: 0.7,
