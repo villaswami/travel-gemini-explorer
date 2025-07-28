@@ -2,7 +2,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY = "AIzaSyCb_iS5ZMmH8M6_qMwpIUQ_w4PiSw_WjjU";
-const MODEL_NAME = "gemini-pro";
+const MODEL_NAME = "gemini-1.5-flash";
 
 export type GeminiMessage = {
   role: "user" | "model";
