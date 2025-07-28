@@ -67,11 +67,18 @@ export const PaymentButton = ({
     <Button 
       onClick={handlePayment} 
       disabled={loading}
-      className="w-full"
+      className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300 text-primary-foreground font-semibold animate-pulse-glow"
       size="lg"
     >
-      <CreditCard className="mr-2 h-4 w-4" />
-      {loading ? "Processing..." : `Pay $${amount.toFixed(2)}`}
+      <CreditCard className="mr-2 h-5 w-5" />
+      {loading ? (
+        <div className="flex items-center space-x-2">
+          <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></div>
+          <span>Processing Payment...</span>
+        </div>
+      ) : (
+        `Pay $${amount.toFixed(2)} - Secure Checkout`
+      )}
     </Button>
   );
 };

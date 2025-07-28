@@ -1,163 +1,170 @@
-
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, User } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Plane, Train, Bus, Car, MapPin, MessageSquare, User, LogOut, Zap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const isMobile = useIsMobile();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-  
-  const getInitials = () => {
-    if (!user) return "?";
-    const name = user.user_metadata.full_name || user.email || "";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
   };
 
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Flights", path: "/flights" },
-    { name: "Trains", path: "/trains" },
-    { name: "Buses", path: "/buses" },
-    { name: "Cars", path: "/cars" },
-    { name: "Travel Assistant", path: "/assistant" },
+  const transportItems = [
+    { name: "Flights", href: "/flights", icon: Plane },
+    { name: "Trains", href: "/trains", icon: Train },
+    { name: "Buses", href: "/buses", icon: Bus },
+    { name: "Cars", href: "/cars", icon: Car },
+    { name: "Places", href: "/places", icon: MapPin },
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white dark:bg-gray-950 shadow-sm border-b">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-travel-primary p-1.5 rounded-md">
-              <span className="text-white font-bold text-xl">TME</span>
-            </div>
-            {!isMobile && (
-              <span className="font-bold text-xl hidden md:block">
-                Travel Made Easy
-              </span>
-            )}
-          </Link>
-        </div>
+    <nav className="sticky top-0 z-50 w-full glass-effect border-b cyber-border">
+      <div className="container flex h-16 items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="flex items-center space-x-2 group">
+          <div className="relative">
+            <Zap className="h-8 w-8 text-primary animate-pulse-glow" />
+            <div className="absolute inset-0 h-8 w-8 bg-primary blur-md opacity-50 animate-pulse"></div>
+          </div>
+          <span className="font-bold text-xl gradient-text group-hover:text-glow transition-all duration-300">
+            TravelGo
+          </span>
+        </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className="text-sm font-medium hover:text-travel-primary transition-colors"
-            >
-              {link.name}
-            </Link>
-          ))}
-        </nav>
+        <div className="hidden md:flex items-center space-x-6">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="cyber-border bg-card/50 hover:bg-card/80 transition-all duration-300">
+                  Transport
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="grid w-[400px] gap-2 p-4 glass-effect">
+                    {transportItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        className="flex items-center space-x-3 rounded-lg p-3 hover:bg-primary/10 transition-all duration-300 group cyber-border"
+                      >
+                        <item.icon className="h-5 w-5 text-primary group-hover:animate-pulse" />
+                        <span className="font-medium group-hover:text-primary transition-colors">
+                          {item.name}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
 
+          <Link
+            to="/assistant"
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg cyber-border bg-secondary/10 hover:bg-secondary/20 transition-all duration-300 group"
+          >
+            <MessageSquare className="h-4 w-4 text-secondary group-hover:animate-pulse" />
+            <span className="text-secondary group-hover:text-glow">AI Assistant</span>
+          </Link>
+
+          {user && (
+            <Link
+              to="/bookings"
+              className="px-4 py-2 rounded-lg cyber-border bg-accent/10 hover:bg-accent/20 transition-all duration-300 text-accent hover:text-glow"
+            >
+              My Bookings
+            </Link>
+          )}
+        </div>
+
+        {/* User Menu */}
         <div className="flex items-center space-x-4">
           {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-travel-primary text-white">
-                      {getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/bookings">My Bookings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 px-3 py-2 rounded-lg cyber-border bg-primary/10">
+                <User className="h-4 w-4 text-primary" />
+                <span className="text-sm text-primary hidden sm:inline">
+                  {user.user_metadata?.full_name || user.email}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="cyber-border hover:bg-destructive/20 hover:text-destructive transition-all duration-300"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:ml-2 sm:inline">Sign Out</span>
+              </Button>
+            </div>
           ) : (
-            <div className="hidden md:block">
-              <Button asChild variant="outline" className="mr-2">
+            <div className="flex items-center space-x-2">
+              <Button asChild variant="outline" className="cyber-border hover:glow-effect">
                 <Link to="/signin">Sign In</Link>
               </Button>
-              <Button asChild>
+              <Button asChild className="bg-gradient-primary hover:shadow-glow transition-all duration-300">
                 <Link to="/signup">Sign Up</Link>
               </Button>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={toggleMobileMenu}
-          >
-            <Menu />
-          </Button>
-        </div>
-      </div>
 
-      {/* Mobile Navigation */}
-      <div
-        className={cn(
-          "md:hidden absolute w-full bg-white dark:bg-gray-950 shadow-md transition-all duration-300 ease-in-out overflow-hidden",
-          mobileMenuOpen ? "max-h-[500px] border-b" : "max-h-0"
-        )}
-      >
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex flex-col space-y-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className="text-sm font-medium py-2 hover:text-travel-primary transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            {!user && (
-              <div className="flex flex-col space-y-2 pt-2 border-t">
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/signin" onClick={() => setMobileMenuOpen(false)}>
-                    Sign In
+          {/* Mobile Menu */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden cyber-border">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="glass-effect cyber-border">
+              <div className="flex flex-col space-y-4 mt-8">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold gradient-text">Transport</h3>
+                  {transportItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center space-x-3 rounded-lg p-3 hover:bg-primary/10 transition-all duration-300 group cyber-border"
+                    >
+                      <item.icon className="h-5 w-5 text-primary group-hover:animate-pulse" />
+                      <span className="group-hover:text-primary transition-colors">
+                        {item.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+
+                <Link
+                  to="/assistant"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center space-x-3 rounded-lg p-3 cyber-border bg-secondary/10 hover:bg-secondary/20 transition-all duration-300"
+                >
+                  <MessageSquare className="h-5 w-5 text-secondary" />
+                  <span className="text-secondary">AI Assistant</span>
+                </Link>
+
+                {user && (
+                  <Link
+                    to="/bookings"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center space-x-3 rounded-lg p-3 cyber-border bg-accent/10 hover:bg-accent/20 transition-all duration-300"
+                  >
+                    <User className="h-5 w-5 text-accent" />
+                    <span className="text-accent">My Bookings</span>
                   </Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
-                    Sign Up
-                  </Link>
-                </Button>
+                )}
               </div>
-            )}
-          </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-    </header>
+    </nav>
   );
 }
