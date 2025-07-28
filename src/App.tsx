@@ -16,6 +16,7 @@ import Cars from "./pages/transport/Cars";
 import Places from "./pages/transport/Places";
 import Checkout from "./pages/checkout/Checkout";
 import BookingConfirmed from "./pages/checkout/BookingConfirmed";
+import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import Profile from "./pages/profile/Profile";
 import MyBookings from "./pages/profile/MyBookings";
 import Bookings from "./pages/Bookings";
@@ -42,6 +43,8 @@ const App = () => (
             <Route path="/places" element={<Places />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/booking-confirmed" element={<BookingConfirmed />} />
+            <Route path="/checkout/confirmed" element={<PaymentSuccess />} />
+            <Route path="/checkout/cancelled" element={<Index />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/bookings" element={<MyBookings />} />
             <Route path="/bookings" element={<Bookings />} />

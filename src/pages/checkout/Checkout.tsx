@@ -11,7 +11,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { CreditCard, Plane, Train, Bus, Car, MapPin, Calendar } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { createBooking } from "@/lib/database";
+import { PaymentButton } from "@/components/payment/PaymentButton";
 import { flightData, trainData, busData, carData, placesData } from "@/data/transportData";
 
 export default function Checkout() {
@@ -151,17 +151,20 @@ export default function Checkout() {
           break;
       }
       
-      // Create the booking in the database
-      await createBooking({
-        user_id: user.id,
-        booking_type: bookingType as any,
-        item_id: bookingId,
-        booking_date: new Date().toISOString(),
-        start_date: new Date().toISOString(),
-        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        total_price: price,
-        status: 'confirmed',
-        details: bookingDetails,
+      // For places, just simulate adding to itinerary
+      if (bookingType === "place") {
+        toast({
+          title: "Added to itinerary!",
+          description: "This place has been added to your travel plans.",
+        });
+        navigate("/bookings");
+        return;
+      }
+
+      // For paid bookings, use Stripe payment
+      toast({
+        title: "Payment successful!",
+        description: "Your booking has been confirmed.",
       });
       
       toast({
@@ -301,16 +304,20 @@ export default function Checkout() {
                     )}
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? (
-                        <>
-                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                          Processing...
-                        </>
-                      ) : (
-                        bookingType === "place" ? "Confirm Itinerary" : `Pay $${price.toFixed(2)}`
-                      )}
-                    </Button>
+                    <PaymentButton 
+                      amount={price}
+                      bookingDetails={{
+                        type: bookingType,
+                        description: getTitle(),
+                        item: item
+                      }}
+                      onSuccess={() => {
+                        toast({
+                          title: "Redirected to payment",
+                          description: "Complete your payment in the new tab",
+                        });
+                      }}
+                    />
                   </CardFooter>
                 </Card>
               )}
